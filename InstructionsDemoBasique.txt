@@ -1,0 +1,44 @@
+https://www.youtube.com/watch?v=qkJ9keBmQWo&t=48s
+
+1/ Créer un projet WEB 
+
+2/ Créer un projet Librairie de classes (.Net standard) 
+
+3/ Créer des classes (public)
+
+4/ Créer une classe Context (ie : FilmContext) 
+	public FilmContext(DbContextOptions options) : base(options) { }
+        public DbSet<Film> Films { get; set; }
+        public DbSet<Realisateur> Realisateurs { get; set; }
+
+5/ Ajouter Le context au projet WEB
+	services.AddDbContext<FilmContext>(options => {
+                options.UseSqlServer(Configuration.GetConnectionString("Default"));
+            });
+
+6/ Créer les scripts de migration 
+	Ajouter nuget Microsoft.EntityFrameorkCore.Tools
+	Console du gestionnaire de package (afficher si jamais -> Autres fenêtres)
+	Add-Migration NomDeLaMigration 
+    ie: Add-Migration InitialDbCreation
+	Attention ! Il faut sélectionner par défaut le bon projet. 
+	Si la librarie de classe est externe, il faut donc sélectionner le bon projet 
+
+7/ Créer la db 
+	Dans la console du gestionnaire de package : 
+	Update-Database
+
+8/ Dans l'index.cshtml.cs (par exemple), ajouter l'accès à la db
+	private readonly FilmContext _db;
+	public IndexModel(ILogger<IndexModel> logger, FilmContext db)
+        {
+            _logger = logger;
+            this._db = db;
+        }
+
+OPTIMISATIONS ET POINTS IMPORTANTS 
+- Décorer ses classes modèles pour être optimisées et correctes. [Required] [MaxLength] ...
+- Dans les requêtes, "include" que si strictement nécessaire. (left join, problèmes de performances)
+- Si possible, filtrer les requêtes côté SQL (serveur), AVANT de les télécharger
+	_db.People.Where(x => ApprovedAge(x.Age)) -> PAS PERFORMANT car toutes les données sont téléchargées et filtrées côté c#
+	_db.People.Where(x => x.Age >= 18 && x.Age <= 65) -> PERFORMANT car les données sont filtrées côté SQL et seulement téléchargées ensuite
